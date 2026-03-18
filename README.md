@@ -1,5 +1,22 @@
 # Launchpad Monorepo
 
+Launchpad is a demo app for eCommerce brands that want the energy of a premium product drop without the usual scramble to design and build a landing page from scratch. A merchant describes a release in plain English, Launchpad uses Codex to generate a fully themed single-file landing page, and the merchant can keep iterating with natural-language prompts until the page feels launch-ready.
+
+The interesting part is the workflow compression. Instead of bouncing between a copy doc, a designer, a frontend engineer, and a marketing tool, Launchpad turns a short product brief into a page with mood, urgency, and structure: hero copy, countdown, product story, and a notify form. It is built to make AI feel less like a toy prompt box and more like a fast creative production tool.
+
+Example use cases:
+
+- A streetwear brand needs a last-minute launch page for a capsule drop happening this weekend.
+- A sneaker reseller wants multiple visual directions for the same release before choosing what to publish.
+- A creator-led merch launch wants a high-drama page that can be regenerated as the campaign angle changes.
+- A hackathon team wants a concrete, visual demo of Codex generating polished customer-facing output instead of backend snippets.
+
+Why it feels compelling:
+
+- The output is immediately visible and easy to judge.
+- The app connects AI generation to a real merchant workflow instead of a one-off text response.
+- It gives non-technical users leverage over landing page creation with simple iteration prompts.
+
 This repository contains:
 
 - `frontend/`: Vite + React + TypeScript + Tailwind CSS v4 + React Router
@@ -22,7 +39,13 @@ cd frontend
 npm install
 ```
 
-2. Run the dev server:
+2. Configure the frontend API URL:
+
+```bash
+cp .env.example .env
+```
+
+3. Run the dev server:
 
 ```bash
 npm run dev -- --host 127.0.0.1 --port 5173
