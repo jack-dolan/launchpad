@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy[asyncio]==2.0.36
+aiosqlite
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
+pydantic==2.12.2
+pydantic-settings==2.5.2
+email-validator
+openai-agents
+pytest
+pytest-asyncio
+httpx
