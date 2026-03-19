@@ -83,6 +83,13 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
+Set at least:
+
+```env
+SECRET_KEY=replace-with-a-strong-secret
+OPENAI_API_KEY=your-openai-api-key
+```
+
 4. Run the API:
 
 ```bash

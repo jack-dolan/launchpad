@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.models import DropStatus
+
 
 class SignupRequest(BaseModel):
     email: EmailStr
@@ -30,23 +32,45 @@ class TokenPayload(BaseModel):
     sub: str | None = None
 
 
-class DropBase(BaseModel):
-    title: str
+class PromptHistoryEntry(BaseModel):
+    role: str
+    content: str
+
+
+class CreateDropRequest(BaseModel):
+    name: str
+    description: str
+    vibe: str
+    drop_date: datetime
+
+
+class UpdateDropRequest(BaseModel):
+    name: str | None = None
     description: str | None = None
+    vibe: str | None = None
+    drop_date: datetime | None = None
 
 
-class DropCreate(DropBase):
-    pass
-
-
-class DropUpdate(BaseModel):
-    title: str | None = None
-    description: str | None = None
-
-
-class DropOut(DropBase):
-    id: int
-    owner_id: str
+class DropResponse(BaseModel):
+    id: str
+    user_id: str
+    name: str
+    description: str
+    vibe: str
+    drop_date: datetime
+    generated_html: str | None
+    prompt_history: list[PromptHistoryEntry]
+    status: DropStatus
     created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class GenerateRequest(BaseModel):
+    prompt: str
+
+
+class GenerateResponse(BaseModel):
+    html: str
+    prompt_used: str

@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { ApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 interface SignupFormState {
   email: string;
@@ -12,6 +13,7 @@ interface SignupFormState {
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const { showError, showSuccess } = useToast();
   const { isAuthenticated, isLoading, signup } = useAuth();
   const [form, setForm] = useState<SignupFormState>({
     email: "",
@@ -25,12 +27,31 @@ export function SignupPage() {
     return <Navigate to="/dashboard" replace />;
   }
 
+  if (isLoading) {
+    return (
+      <main className="mx-auto flex w-full max-w-6xl items-center px-6 py-14 md:min-h-[calc(100vh-81px)]">
+        <div className="grid w-full gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div className="space-y-4">
+            <div className="launchpad-shimmer h-4 w-40 rounded-full bg-white/10" />
+            <div className="launchpad-shimmer h-14 w-full max-w-xl rounded-[1.5rem] bg-white/10" />
+            <div className="launchpad-shimmer h-24 w-full max-w-2xl rounded-[1.5rem] bg-white/10" />
+          </div>
+          <div className="launchpad-shimmer h-[32rem] rounded-[2rem] border border-white/10 bg-white/[0.04]" />
+        </div>
+      </main>
+    );
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
 
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
+      showError({
+        title: "Signup failed",
+        description: "Passwords do not match.",
+      });
       return;
     }
 
@@ -38,12 +59,24 @@ export function SignupPage() {
 
     try {
       await signup({ email: form.email, password: form.password });
+      showSuccess({
+        title: "Account created",
+        description: "Your Launchpad workspace is ready.",
+      });
       navigate("/dashboard", { replace: true });
     } catch (submitError) {
       if (submitError instanceof ApiError) {
         setError(submitError.message);
+        showError({
+          title: "Signup failed",
+          description: submitError.message,
+        });
       } else {
         setError("Unable to create your account right now.");
+        showError({
+          title: "Signup failed",
+          description: "Unable to create your account right now.",
+        });
       }
     } finally {
       setIsSubmitting(false);

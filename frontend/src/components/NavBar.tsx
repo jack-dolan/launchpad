@@ -1,13 +1,19 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export function NavBar() {
   const navigate = useNavigate();
+  const { showSuccess } = useToast();
   const { isAuthenticated, isLoading, logout, user } = useAuth();
 
   function handleLogout() {
     logout();
+    showSuccess({
+      title: "Signed out",
+      description: "Your Launchpad session has been cleared.",
+    });
     navigate("/login");
   }
 

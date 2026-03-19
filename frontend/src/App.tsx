@@ -6,11 +6,13 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { DropDetailsPage } from "./pages/DropDetailsPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
+import { PublicDropPage } from "./pages/PublicDropPage";
 import { SignupPage } from "./pages/SignupPage";
 
 export default function App() {
   return (
     <Routes>
+      <Route path="/drops/:id/public" element={<PublicDropPage />} />
       <Route element={<AppShell />}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />

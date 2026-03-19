@@ -1,8 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
-import { ApiError, apiFetch } from "../lib/api";
-
-const AUTH_TOKEN_KEY = "launchpad.auth.token";
+import { AUTH_TOKEN_KEY, ApiError, apiFetch } from "../lib/api";
 
 interface AuthUser {
   id: string;

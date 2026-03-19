@@ -1,10 +1,16 @@
 from datetime import UTC, datetime
+from enum import Enum
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, DateTime, Enum as SqlEnum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+
+class DropStatus(str, Enum):
+    DRAFT = "draft"
+    PUBLISHED = "published"
 
 
 class User(Base):
@@ -19,20 +25,44 @@ class User(Base):
         nullable=False,
     )
 
-    drops: Mapped[list["Drop"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    drops: Mapped[list["Drop"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Drop(Base):
     __tablename__ = "drops"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    owner_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    vibe: Mapped[str] = mapped_column(String(255), nullable=False)
+    drop_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    generated_html: Mapped[str | None] = mapped_column(Text, nullable=True)
+    prompt_history: Mapped[list[dict[str, str]]] = mapped_column(JSON, default=list, nullable=False)
+    status: Mapped[DropStatus] = mapped_column(
+        SqlEnum(
+            DropStatus,
+            native_enum=False,
+            values_callable=lambda enum_class: [member.value for member in enum_class],
+        ),
+        default=DropStatus.DRAFT,
+        nullable=False,
+    )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
     )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
 
-    owner: Mapped[User] = relationship(back_populates="drops")
+    user: Mapped[User] = relationship(back_populates="drops")

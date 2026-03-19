@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { ApiError } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 interface LoginFormState {
   email: string;
@@ -18,6 +19,7 @@ interface LocationState {
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showError, showSuccess } = useToast();
   const { isAuthenticated, isLoading, login } = useAuth();
   const [form, setForm] = useState<LoginFormState>({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -29,6 +31,21 @@ export function LoginPage() {
     return <Navigate to="/dashboard" replace />;
   }
 
+  if (isLoading) {
+    return (
+      <main className="mx-auto flex w-full max-w-6xl items-center px-6 py-14 md:min-h-[calc(100vh-81px)]">
+        <div className="grid w-full gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div className="space-y-4">
+            <div className="launchpad-shimmer h-4 w-40 rounded-full bg-white/10" />
+            <div className="launchpad-shimmer h-14 w-full max-w-xl rounded-[1.5rem] bg-white/10" />
+            <div className="launchpad-shimmer h-24 w-full max-w-2xl rounded-[1.5rem] bg-white/10" />
+          </div>
+          <div className="launchpad-shimmer h-[28rem] rounded-[2rem] border border-white/10 bg-white/[0.04]" />
+        </div>
+      </main>
+    );
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
@@ -36,12 +53,24 @@ export function LoginPage() {
 
     try {
       await login(form);
+      showSuccess({
+        title: "Signed in",
+        description: "Your dashboard is ready.",
+      });
       navigate(from, { replace: true });
     } catch (submitError) {
       if (submitError instanceof ApiError) {
         setError(submitError.message);
+        showError({
+          title: "Sign in failed",
+          description: submitError.message,
+        });
       } else {
         setError("Unable to sign in right now.");
+        showError({
+          title: "Sign in failed",
+          description: "Unable to sign in right now.",
+        });
       }
     } finally {
       setIsSubmitting(false);

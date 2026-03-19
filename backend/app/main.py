@@ -1,13 +1,34 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from app.codex_service import shutdown_codex_service, startup_codex_service
 from app.config import settings
 from app.database import Base, get_engine
 from app.routers import auth, drops
 
-app = FastAPI(title=settings.app_name)
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """Initialize shared services and cleanup resources when the app exits."""
+    async with get_engine().begin() as conn:
+        if await sqlite_schema_needs_reset(conn):
+            await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+
+    await startup_codex_service()
+
+    try:
+        yield
+    finally:
+        await shutdown_codex_service()
+
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,15 +45,6 @@ app.include_router(auth.router)
 app.include_router(drops.router)
 
 
-@app.on_event("startup")
-async def on_startup() -> None:
-    """Create database tables on application startup."""
-    async with get_engine().begin() as conn:
-        if await sqlite_schema_needs_reset(conn):
-            await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
-
-
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}
@@ -45,7 +57,7 @@ async def sqlite_schema_needs_reset(conn: AsyncConnection) -> bool:
 
     expected_text_columns = {
         "users": {"id"},
-        "drops": {"owner_id"},
+        "drops": {"id", "user_id"},
     }
 
     for table_name, column_names in expected_text_columns.items():
