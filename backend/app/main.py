@@ -47,6 +47,7 @@ app.include_router(drops.router)
 
 @app.get("/health")
 async def health_check() -> dict[str, str]:
+    """Return a simple liveness response for local dev and smoke checks."""
     return {"status": "ok"}
 
 

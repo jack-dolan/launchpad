@@ -4,7 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
-from app.codex_service import generate_landing_page
+from app.codex_service import (
+    DEFAULT_GENERATION_DIRECTION,
+    LandingPageValidationError,
+    generate_landing_page,
+    validate_landing_page_html,
+)
 from app.database import get_db
 from app.models import Drop, DropStatus, User
 from app.schemas import (
@@ -120,7 +125,7 @@ async def generate_drop_landing_page(
 ) -> GenerateResponse:
     """Generate or iterate on a landing page and persist the resulting HTML."""
     drop = await get_user_drop_or_404(drop_id, current_user.id, db)
-    prompt_used = payload.prompt.strip() or "Create the first polished landing page version."
+    prompt_used = payload.prompt.strip() or DEFAULT_GENERATION_DIRECTION
 
     try:
         generated_html = await generate_landing_page(
@@ -131,6 +136,7 @@ async def generate_drop_landing_page(
             previous_html=drop.generated_html,
             iteration_prompt=prompt_used,
         )
+        generated_html = validate_landing_page_html(generated_html)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -163,6 +169,14 @@ async def publish_drop(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Generate the landing page before publishing",
         )
+
+    try:
+        drop.generated_html = validate_landing_page_html(drop.generated_html)
+    except LandingPageValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Stored landing page HTML is invalid: {exc}",
+        ) from exc
 
     drop.status = DropStatus.PUBLISHED
     await db.commit()

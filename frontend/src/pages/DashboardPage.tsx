@@ -30,12 +30,51 @@ interface CreateDropFormState {
   dropDate: string;
 }
 
+interface SamplePreset {
+  id: string;
+  category: string;
+  name: string;
+  description: string;
+  vibe: string;
+  daysFromNow: number;
+}
+
 const VIBE_OPTIONS = [
   { label: "Streetwear Hype", value: "streetwear hype" },
   { label: "Luxury Minimal", value: "luxury minimal" },
   { label: "Y2K Retro", value: "y2k retro" },
   { label: "Cyberpunk", value: "cyberpunk" },
   { label: "Clean & Modern", value: "clean & modern" },
+];
+
+const SAMPLE_PRESETS: SamplePreset[] = [
+  {
+    id: "limited-edition-sneaker",
+    category: "Limited-edition sneaker",
+    name: "Phantom Sprint 01",
+    description:
+      "A midnight performance runner built for a tight collector drop, cinematic product framing, and a countdown that feels like a release event.",
+    vibe: "streetwear hype",
+    daysFromNow: 10,
+  },
+  {
+    id: "hot-sauce-collab",
+    category: "Hot sauce collab",
+    name: "Scoville Syndicate Reserve",
+    description:
+      "A chef-led hot sauce collaboration with glossy bottle visuals, scarcity-driven copy, and a launch page tuned for impulse signups and social buzz.",
+    vibe: "cyberpunk",
+    daysFromNow: 16,
+  },
+  {
+    id: "vinyl-record-drop",
+    category: "Vinyl record drop",
+    name: "After Hours Pressing",
+    description:
+      "A limited vinyl pressing with analog texture, collector-focused storytelling, and a polished waitlist experience for fans chasing the first run.",
+    vibe: "luxury minimal",
+    daysFromNow: 21,
+  },
 ];
 
 const initialFormState: CreateDropFormState = {
@@ -59,15 +98,15 @@ export function DashboardPage() {
 
   useEffect(() => {
     async function loadDrops() {
-    try {
-      const response = await apiFetch<DropSummary[]>("/drops/");
-      setDrops(response);
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setLoadError(error.message);
-      } else {
-        setLoadError("Unable to load drops right now.");
-      }
+      try {
+        const response = await apiFetch<DropSummary[]>("/drops/");
+        setDrops(response);
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setLoadError(error.message);
+        } else {
+          setLoadError("Unable to load drops right now.");
+        }
       } finally {
         setIsLoadingDrops(false);
       }
@@ -75,6 +114,16 @@ export function DashboardPage() {
 
     void loadDrops();
   }, []);
+
+  function applySamplePreset(preset: SamplePreset) {
+    setForm({
+      name: preset.name,
+      description: preset.description,
+      vibe: preset.vibe,
+      dropDate: getNearFutureDate(preset.daysFromNow),
+    });
+    setFormError("");
+  }
 
   async function handleCreateDrop(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -301,11 +350,11 @@ export function DashboardPage() {
                   New drop
                 </p>
                 <h2 className="text-3xl font-semibold tracking-tight text-white">
-                  Build the campaign shell
+                  Launch a merchant-ready campaign brief
                 </h2>
                 <p className="max-w-2xl text-sm leading-7 text-slate-300">
-                  Set the story, the vibe, and the release date. You will land directly on the
-                  editor once the draft is created.
+                  Start from a polished sample or write your own brief. Either way, Launchpad turns
+                  the product story into a draft landing page workflow without slowing down the demo.
                 </p>
               </div>
 
@@ -323,6 +372,58 @@ export function DashboardPage() {
             </div>
 
             <form className="grid gap-5 md:grid-cols-2" onSubmit={handleCreateDrop}>
+              <div className="md:col-span-2 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium uppercase tracking-[0.28em] text-fuchsia-200">
+                      Campaign starters
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold text-white">
+                      One-click sample briefs
+                    </h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">
+                      Use a preset to drop straight into a polished merchant scenario, then fine-tune
+                      the copy before you create the draft.
+                    </p>
+                  </div>
+                  <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+                    Fully editable after selection
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                  {SAMPLE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applySamplePreset(preset)}
+                      className="text-left rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-4 transition hover:-translate-y-0.5 hover:border-fuchsia-400/35 hover:bg-white/[0.07]"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-cyan-100">
+                          {preset.category}
+                        </span>
+                        <span className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
+                          {formatVibe(preset.vibe)}
+                        </span>
+                      </div>
+                      <h4 className="mt-4 text-xl font-semibold text-white">{preset.name}</h4>
+                      <p className="mt-3 line-clamp-4 text-sm leading-7 text-slate-300">
+                        {preset.description}
+                      </p>
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <span className="text-xs uppercase tracking-[0.22em] text-slate-400">
+                          Launches {formatRelativeDateOnly(getNearFutureDate(preset.daysFromNow))}
+                        </span>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white">
+                          Use sample brief
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="md:col-span-1">
                 <label htmlFor="drop-name" className="mb-2 block text-sm font-medium text-slate-200">
                   Name
@@ -376,7 +477,7 @@ export function DashboardPage() {
                   htmlFor="drop-description"
                   className="mb-2 block text-sm font-medium text-slate-200"
                 >
-                  Description
+                  Merchant brief
                 </label>
                 <textarea
                   id="drop-description"
@@ -385,7 +486,7 @@ export function DashboardPage() {
                     setForm((current) => ({ ...current, description: event.target.value }))
                   }
                   className="min-h-40 w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-fuchsia-400/60 focus:bg-white/[0.07]"
-                  placeholder="A reflective limited-run capsule engineered for after-hours demand, dramatic product framing, and a countdown that feels like an event."
+                  placeholder="Describe the product, the collector energy, and the kind of page experience merchants should expect to ship."
                   required
                 />
               </div>
@@ -404,21 +505,9 @@ export function DashboardPage() {
                 >
                   {isSubmitting ? "Creating drop..." : "Create drop"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForm({
-                      name: "Midnight Carbon Capsule",
-                      description:
-                        "A glossy, high-contrast release built for late-night attention, tight product storytelling, and a launch countdown that feels cinematic.",
-                      vibe: "luxury minimal",
-                      dropDate: "2026-04-19",
-                    });
-                  }}
-                  className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/8"
-                >
-                  Use sample brief
-                </button>
+                <p className="self-center text-sm leading-7 text-slate-400">
+                  Fast path for demos: pick a preset, create the draft, then generate immediately.
+                </p>
               </div>
             </form>
           </section>
@@ -479,6 +568,13 @@ function formatRelativeDate(value: string): string {
   }).format(new Date(value));
 }
 
+function formatRelativeDateOnly(value: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -492,4 +588,10 @@ function formatVibe(value: string): string {
 
 function toDropDateIso(value: string): string {
   return new Date(`${value}T12:00:00`).toISOString();
+}
+
+function getNearFutureDate(daysFromNow: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().slice(0, 10);
 }

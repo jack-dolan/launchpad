@@ -34,6 +34,7 @@ LANDING_PAGE_AGENT_INSTRUCTIONS = dedent(
 ).strip()
 
 DEFAULT_GENERATION_DIRECTION = "Create the first polished landing page version for this drop."
+MAX_LANDING_PAGE_HTML_BYTES = 250_000
 
 _codex_manager: MCPServerManager | None = None
 _landing_page_agent: Agent[None] | None = None
@@ -41,6 +42,7 @@ _service_lock = asyncio.Lock()
 
 
 def _build_codex_server() -> MCPServerStdio:
+    """Create the shared Codex MCP server definition used by the app."""
     return MCPServerStdio(
         params={
             "command": "npx",
@@ -52,6 +54,7 @@ def _build_codex_server() -> MCPServerStdio:
 
 
 def _build_landing_page_agent(mcp_server: MCPServerStdio) -> Agent[None]:
+    """Create the agent that turns drop metadata into a self-contained HTML page."""
     return Agent(
         name="landing-page-generator",
         model="gpt-4.1",
@@ -193,7 +196,7 @@ def build_generation_prompt(
 
 
 def extract_html_document(output: str) -> str:
-    """Extract a clean HTML document from the agent response."""
+    """Extract a clean HTML document from the agent response, stripping fences if needed."""
     stripped_output = output.strip()
 
     fenced_match = re.search(
@@ -218,3 +221,63 @@ def extract_html_document(output: str) -> str:
         return stripped_output
 
     raise RuntimeError("Codex did not return a valid HTML document")
+
+
+class LandingPageValidationError(ValueError):
+    """Raised when generated landing page HTML is malformed or unsafe to serve."""
+
+
+def validate_landing_page_html(html: str) -> str:
+    """Validate generated landing page HTML before it is stored or published."""
+    document = html.strip()
+
+    if not document:
+        raise LandingPageValidationError("Generated landing page HTML is empty.")
+
+    if len(document.encode("utf-8")) > MAX_LANDING_PAGE_HTML_BYTES:
+        raise LandingPageValidationError(
+            f"Generated landing page HTML exceeds the {MAX_LANDING_PAGE_HTML_BYTES} byte limit."
+        )
+
+    if not document.lower().startswith(("<!doctype html", "<html")):
+        raise LandingPageValidationError("Generated landing page must be a full HTML document.")
+
+    required_tag_patterns = (
+        (r"<html\b[^>]*>", "Generated landing page must include an opening <html> tag."),
+        (r"</html>", "Generated landing page must include a closing </html> tag."),
+        (r"<body\b[^>]*>", "Generated landing page must include an opening <body> tag."),
+        (r"</body>", "Generated landing page must include a closing </body> tag."),
+    )
+
+    for pattern, message in required_tag_patterns:
+        if re.search(pattern, document, flags=re.IGNORECASE) is None:
+            raise LandingPageValidationError(message)
+
+    disallowed_dependency_patterns = (
+        (
+            r"<script\b[^>]*\bsrc\s*=",
+            "Generated landing page cannot load external scripts.",
+        ),
+        (
+            r"<link\b[^>]*\bhref\s*=",
+            "Generated landing page cannot load external stylesheets, fonts, or linked assets.",
+        ),
+        (
+            r"<img\b[^>]*\bsrc\s*=\s*['\"]?(?!data:|blob:|cid:|#)",
+            "Generated landing page cannot reference external images.",
+        ),
+        (
+            r"@import\s+",
+            "Generated landing page cannot import external stylesheets or fonts.",
+        ),
+        (
+            r"url\(\s*['\"]?(?!data:|blob:|#)",
+            "Generated landing page cannot reference external assets from CSS.",
+        ),
+    )
+
+    for pattern, message in disallowed_dependency_patterns:
+        if re.search(pattern, document, flags=re.IGNORECASE):
+            raise LandingPageValidationError(message)
+
+    return document
