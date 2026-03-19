@@ -95,6 +95,7 @@ export function DashboardPage() {
   const [form, setForm] = useState<CreateDropFormState>(initialFormState);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingDropId, setDeletingDropId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDrops() {
@@ -168,42 +169,96 @@ export function DashboardPage() {
     }
   }
 
+  async function handleDeleteDrop(dropId: string, dropName: string) {
+    const shouldDelete = window.confirm(`Delete "${dropName}"? This cannot be undone.`);
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeletingDropId(dropId);
+
+    try {
+      await apiFetch<void>(`/drops/${dropId}`, {
+        method: "DELETE",
+      });
+      setDrops((current) => current.filter((drop) => drop.id !== dropId));
+      showSuccess({
+        title: "Drop deleted",
+        description: `"${dropName}" has been removed.`,
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        showError({
+          title: "Could not delete drop",
+          description: error.message,
+        });
+      } else {
+        showError({
+          title: "Could not delete drop",
+          description: "Unable to delete the drop right now.",
+        });
+      }
+    } finally {
+      setDeletingDropId(null);
+    }
+  }
+
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-14">
-      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(217,70,239,0.16),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(34,211,238,0.12),_transparent_28%),rgba(15,23,42,0.82)] p-8 shadow-[0_20px_100px_rgba(2,6,23,0.5)] backdrop-blur">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-4">
-            <p className="text-sm font-medium uppercase tracking-[0.32em] text-fuchsia-200">
-              Merchant command
-            </p>
-            <div className="space-y-4">
-              <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white md:text-5xl">
+    <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-8 px-6 py-10 md:py-12">
+      <section className="launchpad-panel-strong overflow-hidden">
+        <div className="grid gap-px bg-white/10 lg:grid-cols-[1.12fr_0.88fr]">
+          <div className="bg-[rgba(8,9,9,0.9)] p-6 md:p-8">
+            <p className="launchpad-label text-[var(--lp-accent)]">Merchant command</p>
+            <div className="mt-5 space-y-5">
+              <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-[var(--lp-fg)] md:text-5xl">
                 {user?.email} is now running a live drop pipeline.
               </h1>
-              <p className="max-w-3xl text-base leading-8 text-slate-300">
-                Shape the creative direction, push a page through Codex, and watch every draft
-                start looking like it already sold out. The cards below are now live, previewable,
-                and ready for generation smoke tests.
+              <p className="max-w-3xl text-base leading-8 text-[var(--lp-muted)]">
+                Shape the creative direction, push a page through Codex, and review every release
+                from an archive that feels more like a publishing system than a CRUD surface.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setIsComposerOpen(true)}
-              className="rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_28px_rgba(217,70,239,0.3)] transition hover:scale-[1.02]"
-            >
-              Create New Drop
-            </button>
-            <div className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm text-slate-300">
-              {drops.length} campaign{drops.length === 1 ? "" : "s"} loaded
+          <div className="grid gap-px bg-white/10 md:grid-cols-2">
+            <div className="bg-[rgba(12,14,14,0.96)] p-6">
+              <p className="launchpad-label">Status</p>
+              <p className="mt-4 text-4xl font-semibold text-[var(--lp-fg)]">{drops.length}</p>
+              <p className="mt-3 text-sm leading-7 text-[var(--lp-muted)]">
+                campaign{drops.length === 1 ? "" : "s"} loaded into the archive.
+              </p>
+            </div>
+            <div className="bg-[rgba(12,14,14,0.96)] p-6">
+              <p className="launchpad-label">Latest motion</p>
+              <p className="mt-4 text-lg font-semibold text-[var(--lp-fg)]">
+                {drops[0]?.name ?? "Ready"}
+              </p>
+              <p className="mt-3 text-sm leading-7 text-[var(--lp-muted)]">
+                {drops[0]
+                  ? `Touched ${formatRelativeDate(drops[0].updated_at)}. ${capitalize(drops[0].status)} state.`
+                  : "Open the composer and create the first campaign shell."}
+              </p>
+            </div>
+            <div className="bg-[rgba(12,14,14,0.96)] p-6 md:col-span-2">
+              <div className="flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsComposerOpen(true)}
+                  className="launchpad-button-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.22em]"
+                >
+                  Create New Drop
+                </button>
+                <div className="border border-white/10 px-4 py-3 text-xs uppercase tracking-[0.22em] text-[var(--lp-muted)]">
+                  Preview mode / {isLoadingDrops ? "syncing" : loadError ? "blocked" : "armed"}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-px border border-white/10 bg-white/10 md:grid-cols-3">
         <MetricCard
           label="Pipeline"
           value={String(drops.length)}
@@ -225,113 +280,165 @@ export function DashboardPage() {
         />
       </section>
 
-      <section className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-6 shadow-[0_20px_80px_rgba(2,6,23,0.45)] backdrop-blur">
+      <section className="launchpad-panel overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.28em] text-slate-400">
-              Drop gallery
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Launch lineup</h2>
+            <p className="launchpad-label">Drop gallery</p>
+            <h2 className="mt-3 text-2xl font-semibold text-[var(--lp-fg)]">Launch archive</h2>
           </div>
 
           <button
             type="button"
             onClick={() => setIsComposerOpen(true)}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-fuchsia-400/40 hover:bg-fuchsia-500/10"
+            className="launchpad-button-secondary px-4 py-2 text-xs font-medium uppercase tracking-[0.22em]"
           >
             New draft
           </button>
         </div>
 
         {isLoadingDrops ? (
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-6 space-y-4">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
-                className="launchpad-shimmer h-[26rem] rounded-[1.75rem] border border-white/10 bg-white/[0.04]"
+                className="launchpad-shimmer h-56 border border-white/10 bg-white/[0.04]"
               />
             ))}
           </div>
         ) : loadError ? (
-          <div className="mt-6 rounded-[1.5rem] border border-rose-400/30 bg-rose-500/10 px-5 py-4 text-sm text-rose-200">
+          <div className="mt-6 border border-rose-400/30 bg-rose-500/10 px-5 py-4 text-sm text-rose-200">
             {loadError}
           </div>
         ) : drops.length === 0 ? (
-          <div className="mt-6 rounded-[1.75rem] border border-dashed border-white/10 bg-[radial-gradient(circle_at_top,_rgba(217,70,239,0.08),_transparent_40%),rgba(255,255,255,0.03)] px-6 py-16 text-center">
-            <p className="text-lg font-medium text-white">No drops in motion yet.</p>
-            <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-300">
+          <div className="mt-6 border border-dashed border-white/10 bg-[rgba(8,9,9,0.55)] px-6 py-16 text-center">
+            <p className="text-lg font-medium text-[var(--lp-fg)]">No drops in motion yet.</p>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--lp-muted)]">
               Create a launch brief to start generating pages, iterating on the vibe, and pushing
               a public link live.
             </p>
             <button
               type="button"
               onClick={() => setIsComposerOpen(true)}
-              className="mt-6 rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_24px_rgba(217,70,239,0.28)] transition hover:scale-[1.02]"
+              className="launchpad-button-primary mt-6 px-5 py-3 text-sm font-semibold uppercase tracking-[0.22em]"
             >
               Create first drop
             </button>
           </div>
         ) : (
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-6 space-y-4">
             {drops.map((drop) => (
-              <Link
+              <article
                 key={drop.id}
-                to={`/drops/${drop.id}`}
-                className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] transition hover:-translate-y-1 hover:border-fuchsia-400/30 hover:shadow-[0_18px_45px_rgba(8,15,30,0.45)]"
+                className="border border-white/10 bg-[rgba(8,9,9,0.86)] transition hover:border-[rgba(200,255,97,0.28)] hover:bg-[rgba(11,12,12,0.96)]"
               >
-                <div className="preview-glow relative m-4 overflow-hidden rounded-[1.35rem] border border-white/10 bg-slate-950">
-                  {drop.generated_html ? (
-                    <div className="pointer-events-none h-48 overflow-hidden bg-slate-950">
-                      <iframe
-                        title={`${drop.name} thumbnail preview`}
-                        srcDoc={drop.generated_html}
-                        className="h-[720px] w-[1280px] origin-top-left scale-[0.375] border-0 bg-white"
-                      />
+                <div className="grid gap-px bg-white/10 xl:grid-cols-[minmax(340px,0.78fr)_minmax(0,1.22fr)]">
+                  <div className="bg-[rgba(8,9,9,0.92)] p-5 md:p-6">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          <span className="launchpad-label border border-white/10 px-3 py-1 text-[var(--lp-muted)]">
+                            Release
+                          </span>
+                          <StatusBadge status={drop.status} />
+                          <span className="launchpad-label border border-white/10 px-3 py-1 text-[var(--lp-muted)]">
+                            {formatVibe(drop.vibe)}
+                          </span>
+                        </div>
+                        <Link to={`/drops/${drop.id}`} className="inline-block">
+                          <h3 className="text-3xl font-semibold text-[var(--lp-fg)] transition hover:text-white">
+                            {drop.name}
+                          </h3>
+                        </Link>
+                      </div>
+                      <span className="launchpad-label border border-white/10 px-3 py-2 text-[var(--lp-muted)]">
+                        {drop.generated_html ? "Preview ready" : "No HTML"}
+                      </span>
                     </div>
-                  ) : (
-                    <div className="flex h-48 items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(217,70,239,0.18),_transparent_40%),linear-gradient(180deg,rgba(15,23,42,0.8),rgba(2,6,23,0.95))]">
-                      <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.28em] text-slate-300">
-                        Awaiting first generation
+
+                    <p className="mt-5 max-w-2xl text-sm leading-8 text-[var(--lp-muted)]">
+                      {drop.description}
+                    </p>
+
+                    <div className="mt-6 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-2 2xl:grid-cols-3">
+                      <div className="min-w-0 bg-[rgba(12,14,14,0.96)] px-4 py-4">
+                        <p className="launchpad-label">Drop date</p>
+                        <p className="mt-3 break-words text-sm leading-7 text-[var(--lp-fg)]">
+                          {formatDropDate(drop.drop_date)}
+                        </p>
+                      </div>
+                      <div className="min-w-0 bg-[rgba(12,14,14,0.96)] px-4 py-4">
+                        <p className="launchpad-label">Prompt trail</p>
+                        <p className="mt-3 break-words text-sm leading-7 text-[var(--lp-fg)]">
+                          {drop.prompt_history.length} prompt{drop.prompt_history.length === 1 ? "" : "s"}
+                        </p>
+                      </div>
+                      <div className="min-w-0 bg-[rgba(12,14,14,0.96)] px-4 py-4 sm:col-span-2 2xl:col-span-1">
+                        <p className="launchpad-label">Updated</p>
+                        <p className="mt-3 break-words text-sm leading-7 text-[var(--lp-fg)]">
+                          {formatRelativeDate(drop.updated_at)}
+                        </p>
                       </div>
                     </div>
-                  )}
 
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
-                </div>
-
-                <div className="space-y-4 px-5 pb-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap gap-2">
-                        <StatusBadge status={drop.status} />
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-cyan-100">
-                          {formatVibe(drop.vibe)}
-                        </span>
-                      </div>
-                      <h3 className="text-2xl font-semibold text-white transition group-hover:text-fuchsia-100">
-                        {drop.name}
-                      </h3>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <Link
+                        to={`/drops/${drop.id}`}
+                        className="launchpad-button-secondary px-4 py-2 text-xs font-medium uppercase tracking-[0.22em]"
+                      >
+                        Open editor
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDrop(drop.id, drop.name)}
+                        disabled={deletingDropId === drop.id}
+                        className="launchpad-button-secondary px-4 py-2 text-xs font-medium uppercase tracking-[0.22em] text-rose-200"
+                      >
+                        {deletingDropId === drop.id ? "Deleting..." : "Delete drop"}
+                      </button>
                     </div>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-slate-300">
-                      {drop.generated_html ? "Preview ready" : "No HTML"}
-                    </span>
                   </div>
 
-                  <p className="line-clamp-3 text-sm leading-7 text-slate-300">{drop.description}</p>
+                  <div className="p-5 xl:self-start">
+                    <div className="launchpad-terminal-frame preview-glow overflow-hidden">
+                      <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#ff7b72]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#f2cc60]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-[var(--lp-accent)]" />
+                        <p className="ml-3 text-[11px] uppercase tracking-[0.22em] text-[var(--lp-muted)]">
+                          archive preview / {drop.name}
+                        </p>
+                      </div>
 
-                  <div className="flex items-center justify-between text-sm text-slate-400">
-                    <span>{formatDropDate(drop.drop_date)}</span>
-                    <span>{drop.prompt_history.length} prompt{drop.prompt_history.length === 1 ? "" : "s"}</span>
+                      {drop.generated_html ? (
+                        <div className="pointer-events-none h-[22rem] overflow-hidden bg-white">
+                          <iframe
+                            title={`${drop.name} thumbnail preview`}
+                            srcDoc={drop.generated_html}
+                            sandbox="allow-scripts allow-forms"
+                            className="h-full w-full border-0 bg-white"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex h-[22rem] items-center justify-center bg-[linear-gradient(180deg,rgba(255,255,255,0.01),transparent),rgba(8,9,9,0.98)] px-8 text-center">
+                          <div>
+                            <p className="launchpad-label">Awaiting first generation</p>
+                            <p className="mt-4 text-sm leading-7 text-[var(--lp-muted)]">
+                              Create the initial render to turn this row into a live artifact.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
         )}
       </section>
 
       {isComposerOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center px-4 py-10">
+        <div className="fixed inset-0 z-40 overflow-y-auto px-4 py-6 md:py-10">
           <button
             type="button"
             aria-label="Close create drop modal"
@@ -340,19 +447,18 @@ export function DashboardPage() {
               setForm(initialFormState);
               setFormError("");
             }}
-            className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
           />
 
-          <section className="relative z-10 w-full max-w-3xl overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(217,70,239,0.18),_transparent_38%),radial-gradient(circle_at_right,_rgba(34,211,238,0.12),_transparent_28%),rgba(15,23,42,0.96)] p-8 shadow-[0_30px_120px_rgba(2,6,23,0.7)]">
+          <div className="relative z-10 flex min-h-full items-start justify-center">
+          <section className="launchpad-panel-strong relative z-10 my-auto w-full max-w-4xl max-h-[calc(100vh-3rem)] overflow-y-auto px-6 py-6 md:px-8 md:py-8">
             <div className="mb-8 flex items-start justify-between gap-4">
               <div className="space-y-3">
-                <p className="text-sm font-medium uppercase tracking-[0.32em] text-cyan-200">
-                  New drop
-                </p>
-                <h2 className="text-3xl font-semibold tracking-tight text-white">
+                <p className="launchpad-label text-[var(--lp-accent)]">New drop</p>
+                <h2 className="text-3xl font-semibold tracking-tight text-[var(--lp-fg)]">
                   Launch a merchant-ready campaign brief
                 </h2>
-                <p className="max-w-2xl text-sm leading-7 text-slate-300">
+                <p className="max-w-2xl text-sm leading-7 text-[var(--lp-muted)]">
                   Start from a polished sample or write your own brief. Either way, Launchpad turns
                   the product story into a draft landing page workflow without slowing down the demo.
                 </p>
@@ -365,28 +471,24 @@ export function DashboardPage() {
                   setForm(initialFormState);
                   setFormError("");
                 }}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-white/20 hover:bg-white/8 hover:text-white"
+                className="launchpad-button-secondary px-4 py-2 text-xs uppercase tracking-[0.22em]"
               >
                 Cancel
               </button>
             </div>
 
             <form className="grid gap-5 md:grid-cols-2" onSubmit={handleCreateDrop}>
-              <div className="md:col-span-2 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
+              <div className="md:col-span-2 border border-white/10 bg-[rgba(8,9,9,0.74)] p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium uppercase tracking-[0.28em] text-fuchsia-200">
-                      Campaign starters
-                    </p>
-                    <h3 className="mt-2 text-xl font-semibold text-white">
-                      One-click sample briefs
-                    </h3>
-                    <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">
+                    <p className="launchpad-label text-[var(--lp-accent)]">Campaign starters</p>
+                    <h3 className="mt-3 text-xl font-semibold text-[var(--lp-fg)]">One-click sample briefs</h3>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--lp-muted)]">
                       Use a preset to drop straight into a polished merchant scenario, then fine-tune
                       the copy before you create the draft.
                     </p>
                   </div>
-                  <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+                  <div className="border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-[var(--lp-muted)]">
                     Fully editable after selection
                   </div>
                 </div>
@@ -397,25 +499,25 @@ export function DashboardPage() {
                       key={preset.id}
                       type="button"
                       onClick={() => applySamplePreset(preset)}
-                      className="text-left rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-4 transition hover:-translate-y-0.5 hover:border-fuchsia-400/35 hover:bg-white/[0.07]"
+                      className="text-left border border-white/10 bg-[rgba(12,14,14,0.96)] p-4 transition hover:border-[rgba(200,255,97,0.3)] hover:bg-[rgba(16,18,18,1)]"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-cyan-100">
+                        <span className="launchpad-label border border-white/10 px-3 py-1 text-[var(--lp-muted)]">
                           {preset.category}
                         </span>
-                        <span className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
+                        <span className="text-[11px] uppercase tracking-[0.22em] text-[var(--lp-muted)]">
                           {formatVibe(preset.vibe)}
                         </span>
                       </div>
-                      <h4 className="mt-4 text-xl font-semibold text-white">{preset.name}</h4>
-                      <p className="mt-3 line-clamp-4 text-sm leading-7 text-slate-300">
+                      <h4 className="mt-4 text-xl font-semibold text-[var(--lp-fg)]">{preset.name}</h4>
+                      <p className="mt-3 line-clamp-4 text-sm leading-7 text-[var(--lp-muted)]">
                         {preset.description}
                       </p>
                       <div className="mt-4 flex items-center justify-between gap-3">
-                        <span className="text-xs uppercase tracking-[0.22em] text-slate-400">
+                        <span className="text-xs uppercase tracking-[0.22em] text-[var(--lp-muted)]">
                           Launches {formatRelativeDateOnly(getNearFutureDate(preset.daysFromNow))}
                         </span>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white">
+                        <span className="border border-white/10 px-3 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--lp-fg)]">
                           Use sample brief
                         </span>
                       </div>
@@ -425,21 +527,21 @@ export function DashboardPage() {
               </div>
 
               <div className="md:col-span-1">
-                <label htmlFor="drop-name" className="mb-2 block text-sm font-medium text-slate-200">
+                <label htmlFor="drop-name" className="mb-2 block text-sm font-medium text-[var(--lp-fg)]">
                   Name
                 </label>
                 <input
                   id="drop-name"
                   value={form.name}
                   onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-fuchsia-400/60 focus:bg-white/[0.07]"
+                  className="launchpad-input"
                   placeholder="Midnight Carbon Capsule"
                   required
                 />
               </div>
 
               <div className="md:col-span-1">
-                <label htmlFor="drop-date" className="mb-2 block text-sm font-medium text-slate-200">
+                <label htmlFor="drop-date" className="mb-2 block text-sm font-medium text-[var(--lp-fg)]">
                   Drop date
                 </label>
                 <input
@@ -449,20 +551,20 @@ export function DashboardPage() {
                   onChange={(event) =>
                     setForm((current) => ({ ...current, dropDate: event.target.value }))
                   }
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-fuchsia-400/60 focus:bg-white/[0.07]"
+                  className="launchpad-input"
                   required
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label htmlFor="drop-vibe" className="mb-2 block text-sm font-medium text-slate-200">
+                <label htmlFor="drop-vibe" className="mb-2 block text-sm font-medium text-[var(--lp-fg)]">
                   Vibe
                 </label>
                 <select
                   id="drop-vibe"
                   value={form.vibe}
                   onChange={(event) => setForm((current) => ({ ...current, vibe: event.target.value }))}
-                  className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none transition focus:border-fuchsia-400/60"
+                  className="launchpad-input"
                 >
                   {VIBE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -475,7 +577,7 @@ export function DashboardPage() {
               <div className="md:col-span-2">
                 <label
                   htmlFor="drop-description"
-                  className="mb-2 block text-sm font-medium text-slate-200"
+                  className="mb-2 block text-sm font-medium text-[var(--lp-fg)]"
                 >
                   Merchant brief
                 </label>
@@ -485,14 +587,14 @@ export function DashboardPage() {
                   onChange={(event) =>
                     setForm((current) => ({ ...current, description: event.target.value }))
                   }
-                  className="min-h-40 w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-fuchsia-400/60 focus:bg-white/[0.07]"
+                  className="launchpad-input min-h-40"
                   placeholder="Describe the product, the collector energy, and the kind of page experience merchants should expect to ship."
                   required
                 />
               </div>
 
               {formError ? (
-                <div className="md:col-span-2 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                <div className="md:col-span-2 border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
                   {formError}
                 </div>
               ) : null}
@@ -501,16 +603,17 @@ export function DashboardPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_28px_rgba(217,70,239,0.3)] transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="launchpad-button-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.22em]"
                 >
                   {isSubmitting ? "Creating drop..." : "Create drop"}
                 </button>
-                <p className="self-center text-sm leading-7 text-slate-400">
+                <p className="self-center text-sm leading-7 text-[var(--lp-muted)]">
                   Fast path for demos: pick a preset, create the draft, then generate immediately.
                 </p>
               </div>
             </form>
           </section>
+          </div>
         </div>
       ) : null}
     </main>
@@ -525,10 +628,10 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, body }: MetricCardProps) {
   return (
-    <article className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-      <p className="text-sm uppercase tracking-[0.25em] text-slate-400">{label}</p>
-      <p className="mt-4 text-3xl font-semibold text-white">{value}</p>
-      <p className="mt-2 text-sm leading-7 text-slate-300">{body}</p>
+    <article className="bg-[rgba(8,9,9,0.84)] p-6">
+      <p className="launchpad-label">{label}</p>
+      <p className="mt-4 text-3xl font-semibold text-[var(--lp-fg)]">{value}</p>
+      <p className="mt-3 text-sm leading-7 text-[var(--lp-muted)]">{body}</p>
     </article>
   );
 }
@@ -540,10 +643,10 @@ interface StatusBadgeProps {
 function StatusBadge({ status }: StatusBadgeProps) {
   return (
     <span
-      className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.22em] ${
+      className={`border px-3 py-1 text-[11px] uppercase tracking-[0.22em] ${
         status === "published"
-          ? "border border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
-          : "border border-amber-400/30 bg-amber-500/10 text-amber-200"
+          ? "border-[rgba(200,255,97,0.34)] bg-[rgba(200,255,97,0.1)] text-[var(--lp-accent)]"
+          : "border-white/12 bg-white/[0.03] text-[var(--lp-fg)]"
       }`}
     >
       {status}

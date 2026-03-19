@@ -18,20 +18,27 @@ export function NavBar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-20 border-b border-white/10 bg-[rgba(8,9,9,0.88)] backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-6 px-6 py-4">
+        <div className="flex items-center gap-8">
           <Link
             to="/"
-            className="text-lg font-semibold tracking-[0.24em] text-white transition hover:text-fuchsia-200"
+            className="group"
           >
-            LAUNCHPAD
+            <span className="block text-[10px] uppercase tracking-[0.32em] text-[var(--lp-accent)]">
+              Computational publishing
+            </span>
+            <span className="mt-1 block text-lg font-semibold tracking-[0.28em] text-[var(--lp-fg)] transition group-hover:text-white">
+              LAUNCHPAD
+            </span>
           </Link>
-          <nav className="hidden items-center gap-4 text-sm text-slate-300 md:flex">
+          <nav className="hidden items-center gap-6 text-xs uppercase tracking-[0.24em] text-[var(--lp-muted)] md:flex">
             <NavLink
               to="/"
               className={({ isActive }) =>
-                isActive ? "text-white" : "transition hover:text-white"
+                isActive
+                  ? "border-b border-[var(--lp-accent)] pb-1 text-[var(--lp-fg)]"
+                  : "border-b border-transparent pb-1 transition hover:text-[var(--lp-fg)]"
               }
             >
               Home
@@ -40,7 +47,9 @@ export function NavBar() {
               <NavLink
                 to="/dashboard"
                 className={({ isActive }) =>
-                  isActive ? "text-white" : "transition hover:text-white"
+                  isActive
+                    ? "border-b border-[var(--lp-accent)] pb-1 text-[var(--lp-fg)]"
+                    : "border-b border-transparent pb-1 transition hover:text-[var(--lp-fg)]"
                 }
               >
                 Dashboard
@@ -51,14 +60,16 @@ export function NavBar() {
 
         <div className="flex items-center gap-3">
           {isLoading ? (
-            <div className="h-10 w-36 animate-pulse rounded-full border border-white/10 bg-white/5" />
+            <div className="h-10 w-40 animate-pulse border border-white/10 bg-white/5" />
           ) : isAuthenticated && user ? (
             <>
-              <span className="hidden text-sm text-slate-300 sm:inline">{user.email}</span>
+              <span className="hidden border border-white/10 px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--lp-muted)] sm:inline">
+                {user.email}
+              </span>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-fuchsia-400/50 hover:bg-fuchsia-500/10"
+                className="launchpad-button-secondary px-4 py-2 text-xs font-medium uppercase tracking-[0.22em]"
               >
                 Logout
               </button>
@@ -67,13 +78,13 @@ export function NavBar() {
             <>
               <Link
                 to="/login"
-                className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:text-white"
+                className="launchpad-button-secondary px-4 py-2 text-xs font-medium uppercase tracking-[0.22em]"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-[0_0_24px_rgba(192,38,211,0.35)] transition hover:scale-[1.02]"
+                className="launchpad-button-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em]"
               >
                 Signup
               </Link>

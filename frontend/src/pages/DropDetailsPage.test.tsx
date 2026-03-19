@@ -56,6 +56,7 @@ function renderPage() {
     <MemoryRouter initialEntries={["/drops/drop-1"]}>
       <Routes>
         <Route path="/drops/:id" element={<DropDetailsPage />} />
+        <Route path="/dashboard" element={<div>Dashboard Screen</div>} />
       </Routes>
     </MemoryRouter>
   );
@@ -196,5 +197,30 @@ describe("DropDetailsPage", () => {
       "href",
       expect.stringContaining("/drops/drop-1/public")
     );
+  });
+
+  it("deletes the drop and returns to the dashboard", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockedApiFetch.mockResolvedValueOnce(createDrop()).mockResolvedValueOnce(undefined);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(mockedApiFetch).toHaveBeenCalledWith("/drops/drop-1");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete drop" }));
+
+    await waitFor(() => {
+      expect(mockedApiFetch).toHaveBeenCalledWith("/drops/drop-1", {
+        method: "DELETE",
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Dashboard Screen")).toBeInTheDocument();
+    });
+
+    confirmSpy.mockRestore();
   });
 });

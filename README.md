@@ -139,8 +139,8 @@ make dev
 Default local URLs:
 
 - Frontend: `http://127.0.0.1:5173`
-- Backend: `http://127.0.0.1:8000`
-- Health check: `http://127.0.0.1:8000/health`
+- Backend: `http://127.0.0.1:8001`
+- Health check: `http://127.0.0.1:8001/health`
 
 ## Makefile Workflow
 
@@ -167,7 +167,7 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
 ### Frontend

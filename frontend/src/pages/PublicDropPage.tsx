@@ -50,18 +50,18 @@ export function PublicDropPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.1),_transparent_24%),radial-gradient(circle_at_bottom,_rgba(217,70,239,0.12),_transparent_30%),#020617] px-5 py-5 text-white">
-        <section className="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-[1600px] flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/85 shadow-[0_28px_100px_rgba(2,6,23,0.6)]">
+      <main className="min-h-screen bg-[var(--lp-bg)] px-5 py-5 text-[var(--lp-fg)]">
+        <section className="launchpad-panel-strong mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-[1700px] flex-col overflow-hidden">
           <PublicShellHeader eyebrow="Loading drop" title="Preparing the public launch page" />
-          <div className="grid flex-1 gap-6 p-5 lg:grid-cols-[0.34fr_0.66fr] lg:p-6">
-            <div className="space-y-4 rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5">
-              <div className="launchpad-shimmer h-4 w-28 rounded-full bg-white/10" />
-              <div className="launchpad-shimmer h-10 w-3/4 rounded-[1rem] bg-white/10" />
-              <div className="launchpad-shimmer h-4 w-full rounded-full bg-white/10" />
-              <div className="launchpad-shimmer h-4 w-5/6 rounded-full bg-white/10" />
-              <div className="launchpad-shimmer h-28 rounded-[1.5rem] bg-white/10" />
+          <div className="grid flex-1 gap-px bg-white/10 lg:grid-cols-[0.34fr_0.66fr]">
+            <div className="space-y-4 bg-[rgba(8,9,9,0.9)] p-5 lg:p-6">
+              <div className="launchpad-shimmer h-4 w-28 bg-white/10" />
+              <div className="launchpad-shimmer h-10 w-3/4 bg-white/10" />
+              <div className="launchpad-shimmer h-4 w-full bg-white/10" />
+              <div className="launchpad-shimmer h-4 w-5/6 bg-white/10" />
+              <div className="launchpad-shimmer h-28 bg-white/10" />
             </div>
-            <div className="launchpad-shimmer rounded-[1.9rem] border border-white/10 bg-white/[0.04]" />
+            <div className="launchpad-shimmer bg-[rgba(12,14,14,0.96)]" />
           </div>
         </section>
       </main>
@@ -70,36 +70,38 @@ export function PublicDropPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_24%),radial-gradient(circle_at_bottom,_rgba(244,63,94,0.14),_transparent_30%),#020617] px-5 py-5 text-white">
-        <section className="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-[1500px] flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/88 shadow-[0_28px_100px_rgba(2,6,23,0.6)]">
+      <main className="min-h-screen bg-[var(--lp-bg)] px-5 py-5 text-[var(--lp-fg)]">
+        <section className="launchpad-panel-strong mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-[1600px] flex-col overflow-hidden">
           <PublicShellHeader eyebrow="Launch unavailable" title="This public drop could not be loaded" />
-          <div className="grid flex-1 gap-6 p-5 lg:grid-cols-[0.38fr_0.62fr] lg:p-6">
-            <div className="rounded-[1.75rem] border border-rose-400/20 bg-rose-500/10 p-6">
-              <p className="text-xs uppercase tracking-[0.24em] text-rose-200">Error details</p>
-              <p className="mt-4 text-base leading-8 text-slate-200">{error}</p>
+          <div className="grid flex-1 gap-px bg-white/10 lg:grid-cols-[0.38fr_0.62fr]">
+            <div className="border-r border-white/10 bg-[rgba(8,9,9,0.9)] p-6">
+              <p className="launchpad-label text-rose-200">Error details</p>
+              <p className="mt-4 text-base leading-8 text-[var(--lp-fg)]">{error}</p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:scale-[1.02]"
+                  className="launchpad-button-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.22em]"
                 >
                   Retry
                 </button>
                 <Link
                   to="/"
-                  className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:border-white/25 hover:bg-white/8"
+                  className="launchpad-button-secondary px-5 py-3 text-sm font-medium uppercase tracking-[0.22em]"
                 >
                   Back to Launchpad
                 </Link>
               </div>
             </div>
 
-            <div className="rounded-[1.9rem] border border-white/10 bg-white/[0.03] p-5">
-              <div className="flex h-full min-h-[26rem] items-center justify-center rounded-[1.5rem] border border-dashed border-white/10 bg-slate-950/70 px-8 text-center">
+            <div className="bg-[rgba(12,14,14,0.98)] p-5 lg:p-6">
+              <div className="flex h-full min-h-[26rem] items-center justify-center border border-dashed border-white/10 bg-[rgba(8,9,9,0.72)] px-8 text-center">
                 <div className="max-w-md">
-                  <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Public shell</p>
-                  <h2 className="mt-4 text-3xl font-semibold text-white">The launch frame is intact.</h2>
-                  <p className="mt-4 text-sm leading-7 text-slate-300">
+                  <p className="launchpad-label">Public shell</p>
+                  <h2 className="mt-4 text-3xl font-semibold text-[var(--lp-fg)]">
+                    The launch frame is intact.
+                  </h2>
+                  <p className="mt-4 text-sm leading-7 text-[var(--lp-muted)]">
                     Once the page loads successfully, the published HTML takes over this entire stage.
                   </p>
                 </div>
@@ -113,47 +115,45 @@ export function PublicDropPage() {
 
   if (isComingSoon) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(217,70,239,0.14),_transparent_30%),radial-gradient(circle_at_right,_rgba(34,211,238,0.12),_transparent_24%),#020617] px-5 py-5 text-white">
-        <section className="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-[1500px] flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/88 shadow-[0_28px_100px_rgba(2,6,23,0.6)]">
+      <main className="min-h-screen bg-[var(--lp-bg)] px-5 py-5 text-[var(--lp-fg)]">
+        <section className="launchpad-panel-strong mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-[1600px] flex-col overflow-hidden">
           <PublicShellHeader eyebrow="Coming soon" title="This drop exists, but it is not public yet" />
-          <div className="grid flex-1 gap-6 p-5 lg:grid-cols-[0.38fr_0.62fr] lg:p-6">
-            <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-6">
-              <p className="text-base leading-8 text-slate-300">
+          <div className="grid flex-1 gap-px bg-white/10 lg:grid-cols-[0.38fr_0.62fr]">
+            <div className="bg-[rgba(8,9,9,0.9)] p-6">
+              <p className="text-base leading-8 text-[var(--lp-muted)]">
                 The launch route is reserved. When the merchant publishes, the generated landing
                 page takes over this shell and becomes the full experience.
               </p>
               {publicUrl ? (
-                <div className="mt-6 rounded-[1.25rem] border border-white/10 bg-slate-950/65 px-4 py-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
-                    Public URL
-                  </p>
-                  <p className="mt-3 break-all text-sm text-white">{publicUrl}</p>
+                <div className="mt-6 border border-white/10 bg-[rgba(12,14,14,0.96)] px-4 py-4">
+                  <p className="launchpad-label">Public URL</p>
+                  <p className="mt-3 break-all text-sm text-[var(--lp-fg)]">{publicUrl}</p>
                 </div>
               ) : null}
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   to="/"
-                  className="rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_28px_rgba(217,70,239,0.3)] transition hover:scale-[1.02]"
+                  className="launchpad-button-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.22em]"
                 >
                   Learn about Launchpad
                 </Link>
                 <Link
                   to="/signup"
-                  className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:border-white/25 hover:bg-white/8"
+                  className="launchpad-button-secondary px-5 py-3 text-sm font-medium uppercase tracking-[0.22em]"
                 >
                   Sign up
                 </Link>
               </div>
             </div>
 
-            <div className="rounded-[1.9rem] border border-white/10 bg-white/[0.03] p-5">
-              <div className="flex h-full min-h-[28rem] items-center justify-center rounded-[1.5rem] border border-dashed border-white/10 bg-[radial-gradient(circle_at_top,_rgba(217,70,239,0.12),transparent_32%),rgba(15,23,42,0.9)] px-8 text-center">
+            <div className="bg-[rgba(12,14,14,0.98)] p-5 lg:p-6">
+              <div className="flex h-full min-h-[28rem] items-center justify-center border border-dashed border-white/10 bg-[rgba(8,9,9,0.72)] px-8 text-center">
                 <div className="max-w-lg">
-                  <p className="text-xs uppercase tracking-[0.28em] text-cyan-200">Launch stage armed</p>
-                  <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">
+                  <p className="launchpad-label text-[var(--lp-accent)]">Launch stage armed</p>
+                  <h2 className="mt-4 text-4xl font-semibold tracking-tight text-[var(--lp-fg)]">
                     Waiting for publish
                   </h2>
-                  <p className="mt-4 text-sm leading-7 text-slate-300">
+                  <p className="mt-4 text-sm leading-7 text-[var(--lp-muted)]">
                     Once published, the generated HTML becomes the hero here without any extra chrome
                     competing for attention.
                   </p>
@@ -167,18 +167,18 @@ export function PublicDropPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.08),_transparent_18%),#020617] px-4 py-4 text-white md:px-5 md:py-5">
-      <section className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[1700px] flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/92 shadow-[0_28px_100px_rgba(2,6,23,0.65)]">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-slate-950/85 px-5 py-4 backdrop-blur">
+    <main className="min-h-screen bg-[var(--lp-bg)] px-4 py-4 text-[var(--lp-fg)] md:px-5 md:py-5">
+      <section className="launchpad-panel-strong mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[1800px] flex-col overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[rgba(8,9,9,0.9)] px-5 py-4 backdrop-blur">
           <div className="flex items-center gap-3">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--lp-accent)]" />
             <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-emerald-200">Live drop</p>
-              <p className="mt-1 text-sm text-slate-300">Published with Launchpad</p>
+              <p className="launchpad-label text-[var(--lp-accent)]">Live drop</p>
+              <p className="mt-1 text-sm text-[var(--lp-muted)]">Published with Launchpad</p>
             </div>
           </div>
           {publicUrl ? (
-            <p className="max-w-xl truncate text-xs uppercase tracking-[0.18em] text-slate-500">
+            <p className="max-w-xl truncate text-xs uppercase tracking-[0.18em] text-[var(--lp-muted)]">
               {publicUrl}
             </p>
           ) : null}
@@ -204,9 +204,11 @@ interface PublicShellHeaderProps {
 
 function PublicShellHeader({ eyebrow, title }: PublicShellHeaderProps) {
   return (
-    <div className="border-b border-white/10 bg-slate-950/82 px-5 py-5 backdrop-blur lg:px-6">
-      <p className="text-xs uppercase tracking-[0.3em] text-cyan-200">{eyebrow}</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">{title}</h1>
+    <div className="border-b border-white/10 bg-[rgba(8,9,9,0.88)] px-5 py-5 backdrop-blur lg:px-6">
+      <p className="launchpad-label text-[var(--lp-accent)]">{eyebrow}</p>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--lp-fg)] md:text-5xl">
+        {title}
+      </h1>
     </div>
   );
 }

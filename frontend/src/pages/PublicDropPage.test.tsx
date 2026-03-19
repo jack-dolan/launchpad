@@ -86,10 +86,13 @@ describe("PublicDropPage", () => {
       });
     });
 
-    expect(screen.getByText("Live drop")).toBeInTheDocument();
-    expect(screen.getByTitle("Published drop")).toHaveAttribute(
-      "srcdoc",
-      "<html><body>Live launch</body></html>"
-    );
+    await waitFor(() => {
+      expect(screen.getByTitle("Published drop")).toHaveAttribute(
+        "srcdoc",
+        "<html><body>Live launch</body></html>"
+      );
+    });
+
+    expect(screen.getByText("Published with Launchpad")).toBeInTheDocument();
   });
 });
